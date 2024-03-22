@@ -18,17 +18,17 @@ class DeepSurModel(nn.Module):
         self.K = K
         # sample parameters for the mixture model
         rnd = np.random.RandomState(12345)
-        b = torch.FloatTensor(abs(rnd.normal(0, 10, (1, 1, self.K))+5.0))
-        k = torch.FloatTensor(abs(rnd.normal(0, 10, (1, 1, self.K))+5.0))
+        b = torch.FloatTensor(abs(rnd.normal(0, 10, (1, 1, self.K))+5.0))##torch.Size([1, 1, self.K=512])
+        k = torch.FloatTensor(abs(rnd.normal(0, 10, (1, 1, self.K))+5.0))##torch.Size([1, 1, self.K=512])
         self.register_buffer('b', b)
         self.register_buffer('k', k)
 
         self.cnn = ModelProgression(backbone='resnet50', output_size=512)
 
     def _cdf_at(self, t):
-        # pdf: nBatch * n * K
-        pdf = 1 - torch.exp(-(1/self.b * (t)) ** self.k)
-        return pdf
+        # cdf: nBatch * n * K
+        cdf = 1 - torch.exp(-(1/self.b * (t)) ** self.k)
+        return cdf
 
     def _pdf_at(self, t):
         # pdf: nBatch * n * K
@@ -43,15 +43,15 @@ class DeepSurModel(nn.Module):
 
         param w: nBatch * K: weights for mixture model
         param t: nBatch * n: target time to calculate pdf at
-        return: nBatch * n: pdf values
+        return: nBatch * n: cdf values
         """
-        t = t.unsqueeze(dim=2)
+        t = t.unsqueeze(dim=2)## t: nBatch * n * 1
         w = nn.functional.softmax(w, dim=1)
-        w = w.unsqueeze(dim=1)
-        pdf = self._cdf_at(t)
-        pdf = pdf * w
-        pdf = pdf.sum(dim=2)
-        return pdf
+        w = w.unsqueeze(dim=1)#3 w: nBatch * 1 * K
+        cdf = self._cdf_at(t)#3 pdf: nBatch * n * K
+        cdf = cdf * w## cdf: nBatch * n * K
+        cdf = cdf.sum(dim=2)## cdf: nBatch * n
+        return cdf
 
     def calculate_pdf(self, w, t):
         """
@@ -64,11 +64,11 @@ class DeepSurModel(nn.Module):
         """
         t = t.unsqueeze(dim=2)
         w = nn.functional.softmax(w, dim=1)
-        w = w.unsqueeze(dim=1)
-        pdf = self._pdf_at(t)
-        pdf = pdf * w
+        w = w.unsqueeze(dim=1)## w: nBatch * 1 * K
+        pdf = self._pdf_at(t)### pdf: nBatch * n * K
+        pdf = pdf * w## pdf: nBatch * n * K
         pdf = pdf.sum(dim=2)
-        return pdf
+        return pdf## pdf: nBatch * n
 
     def calculate_survial_time(self, w, t_max=10, resolution=20):
         """
@@ -79,10 +79,11 @@ class DeepSurModel(nn.Module):
             t_max,
             math.ceil(resolution*t_max)-1,
             dtype=torch.float32,
-            device=w.device).view(1, -1)
-        pdf = self.calculate_pdf(w, t)
+            device=w.device).view(1, -1)## t shape torch.Size([1, 199])
+        # torch.linspace(start, end, steps, out=None, dtype=None, layout=torch.strided, device=None, requires_grad=False) → Tensor
+        pdf = self.calculate_pdf(w, t)##nBatch * n
         # print(pdf[])
-        est = t.view(-1)[torch.argmax(pdf, dim=1)]
+        est = t.view(-1)[torch.argmax(pdf, dim=1)]##在pdf 中取值最大的索引（表示最大概率得病的概率），然后对应到时间t上
         # print(torch.argmax(pdf, dim=1).shape())
         return est
 
@@ -105,7 +106,12 @@ class ProgressionData(Dataset):
 
     def __getitem__(self, idx):
         img_file = self.df.iloc[idx]['image']
+        # print('img_file--------',img_file)##data_fund/train_1.jpg
+        # import os
+        # img_file = os.path.join('./', img_file)
+        # print('img_file--------',img_file)##data_fund/train_1.jpg
         image = cv2.imread(img_file, cv2.IMREAD_COLOR)
+        
         image = self.transform(image=image)['image']
         return dict(
             image=image,
@@ -176,11 +182,26 @@ class TrainerDR(Trainer):
         imgs = data['image'].to(self.device)
         t1 = data['t1'].to(self.device)
         t2 = data['t2'].to(self.device)
+        print('t1', t1)##tensor([3, 1]
+        print('t2', t2)##t2 tensor([5, 2],
         e = data['e'].to(self.device)
 
         w, P = self.model(imgs, torch.stack([t1, t2], dim=1))
-        P1 = P[:, 0]
-        P2 = P[:, 1]
+        ## P:cdf: nBatch * n when training n=2
+        print('P.shape', P.shape)##
+        P1 = P[:, 0]##cdf at t1 论文中的t'
+        P2 = P[:, 1]##cdf at t2 论文中的t
+        ###https://en.wikipedia.org/wiki/Weibull_distribution
+        ##for weibull distribution the cdf is 1 - exp(-(t/b)^k), so 1-cdf = exp(-(t/b)^k)
+        ## for weibull distribution the pdf is k/b * (t/b)^(k-1) * exp(-(t/b)^k)
+        ### 
+        ''' 
+        for self.beta 
+        @cached_property
+        def beta(self):
+            return 1
+        so self.beta = 1
+        '''
         loss = -torch.log(1-P1 + 0.000001) - torch.log(P2 +
                                                        0.000001) * self.beta * (e)
         loss += torch.abs(w).mean() * 0.00000001
