@@ -189,8 +189,8 @@ class TrainerDR(Trainer):
         w, P = self.model(imgs, torch.stack([t1, t2], dim=1))
         ## P:cdf: nBatch * n when training n=2
         print('P.shape', P.shape)##
-        P1 = P[:, 0]##cdf at t1 论文中的t'
-        P2 = P[:, 1]##cdf at t2 论文中的t
+        P1 = P[:, 0]##cdf at t1 论文中的t_i
+        P2 = P[:, 1]##cdf at t2 论文中的t_i'
         ###https://en.wikipedia.org/wiki/Weibull_distribution
         ##for weibull distribution the cdf is 1 - exp(-(t/b)^k), so 1-cdf = exp(-(t/b)^k)
         ## for weibull distribution the pdf is k/b * (t/b)^(k-1) * exp(-(t/b)^k)
