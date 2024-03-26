@@ -192,8 +192,8 @@ class TrainerDR(Trainer):
         w_sum = torch.sum(w, dim=1, keepdim=True)
         print('w_sum', w_sum)##w_sum tensor([[-10.1160],[ 11.1659]], device='cuda:0', grad_fn=<SumBackward1>)
         print('P.shape', P.shape)##
-        P1 = P[:, 0]##cdf at t1 论文中的t'
-        P2 = P[:, 1]##cdf at t2 论文中的t
+        P1 = P[:, 0]##cdf at t1 论文中的t_i
+        P2 = P[:, 1]##cdf at t2 论文中的t_i'
         ###https://en.wikipedia.org/wiki/Weibull_distribution
         ##for weibull distribution the cdf is 1 - exp(-(t/b)^k), so 1-cdf = exp(-(t/b)^k)
         ## for weibull distribution the pdf is k/b * (t/b)^(k-1) * exp(-(t/b)^k)
