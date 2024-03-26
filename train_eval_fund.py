@@ -46,7 +46,7 @@ class DeepSurModel(nn.Module):
         return: nBatch * n: cdf values
         """
         t = t.unsqueeze(dim=2)## t: nBatch * n * 1
-        w = nn.functional.softmax(w, dim=1)
+        w = nn.functional.softmax(w, dim=1)### ensure sum of w is 1, to mix the weibull distribution
         w = w.unsqueeze(dim=1)#3 w: nBatch * 1 * K
         cdf = self._cdf_at(t)#3 pdf: nBatch * n * K
         cdf = cdf * w## cdf: nBatch * n * K
@@ -188,6 +188,9 @@ class TrainerDR(Trainer):
 
         w, P = self.model(imgs, torch.stack([t1, t2], dim=1))
         ## P:cdf: nBatch * n when training n=2
+        print('w.shape', w.shape)##w.shape torch.Size([2, 512])
+        w_sum = torch.sum(w, dim=1, keepdim=True)
+        print('w_sum', w_sum)##w_sum tensor([[-10.1160],[ 11.1659]], device='cuda:0', grad_fn=<SumBackward1>)
         print('P.shape', P.shape)##
         P1 = P[:, 0]##cdf at t1 论文中的t'
         P2 = P[:, 1]##cdf at t2 论文中的t
