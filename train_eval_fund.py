@@ -89,6 +89,7 @@ class DeepSurModel(nn.Module):
 
     def forward(self, x, t=None):
         x = self.cnn(x)
+        print('x.shape', x.shape)##x.shape torch.Size([2, 512])
         if t is None:
             return x
         return x, self.calculate_cdf(x, t)
