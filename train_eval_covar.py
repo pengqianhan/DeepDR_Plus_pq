@@ -42,13 +42,17 @@ class ProgressionData(Dataset):
     def __init__(self, datasheet, feature_keys):
         super().__init__()
         self.df = pd.read_csv(datasheet)
+        print('self.df',self.df)
         self.feature_keys = feature_keys
+        print('self.feature_keys',self.feature_keys)
 
     def __len__(self):
         return len(self.df)
 
     def __getitem__(self, idx):
         X = self.df.iloc[idx][self.feature_keys].values
+        gta=self.df.iloc[idx]['gt'] if 'gt' in self.df.columns else 0
+        print('gta:',gta)
         return dict(
             covar=X,
             t1=self.df.iloc[idx]['t1'],
@@ -127,5 +131,6 @@ class TrainerDR(Trainer):
 
 if __name__ == '__main__':
     import sys
+    # print('sys.argv',sys.argv)
     trainer = TrainerDR(sys.argv[1:])
     trainer.train()
