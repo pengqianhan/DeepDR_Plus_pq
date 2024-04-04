@@ -88,6 +88,7 @@ class TrainerDR(Trainer):
 
     def batch(self, epoch, i_batch, data) -> dict:
         # get and prepare data elements
+        # print('data in batch',data)
         co_var = data['covar'].to(self.device).to(torch.float32)
         if co_var.shape[1] < 32:
             co_var = F.pad(co_var, (0, 32-co_var.shape[1]))

@@ -126,6 +126,10 @@ class ProgressionData(Dataset):
 
 class TrainerDR(Trainer):
 
+    '''
+    cached_property 是一个 Python 装饰器，用于将一个类的方法转换为属性，且该属性的值在第一次访问后会被缓存。这意味着，无论你多少次访问这个属性，方法只会在第一次访问时被调用，之后的访问都会直接返回缓存的结果。
+这在你有一个计算成本较高的属性，且你知道在对象的生命周期中该属性的值不会改变的情况下非常有用。
+    '''
     @cached_property
     def model(self):
         model = DeepSurModel().to(self.device)
