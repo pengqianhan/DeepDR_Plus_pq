@@ -88,7 +88,7 @@ class TrainerConfig(Config):
     image_size = Parser('image_size', 512, int, 'image size')
     lr = Parser('lr', 0.001, float, 'learning rate')
     device = Parser('device', 'cuda:0', str, 'device')
-    num_workers = Parser('num_workers', 4, int, 'number of workers')
+    num_workers = Parser('num_workers', 1, int, 'number of workers')
     model = Parser('model', 'resnet50', str, 'backbone model')
 
 

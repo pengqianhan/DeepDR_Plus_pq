@@ -31,6 +31,7 @@ class DeepSurModel(_DeepSurModel):
 
     def forward(self, x, t=None):
         x = self.cnn(x)
+        print('x.shape in train_eval_covar',x.shape)
         if t is None:
             return x
         return x, self.calculate_cdf(x, t)

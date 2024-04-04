@@ -5,11 +5,11 @@ from typing import Any, Dict, Union, List, Tuple, Callable
 from torch.nn import Module
 import torch.nn as nn
 from torchvision.models.resnet import resnet50, resnet18, resnet101
-from torchvision.models import convnext_tiny
+# from torchvision.models import convnext_tiny
 import torch
 import torch.nn.functional as F
 from dataclasses import dataclass
-from torchvision.models.vision_transformer import vit_b_16
+# from torchvision.models.vision_transformer import vit_b_16
 from abc import ABC, abstractclassmethod
 
 
@@ -95,6 +95,7 @@ class ModelProgression(Module):
         backbone = model_def.backbone
         feat_size = model_def.output_size
         self.hooks = model_def.hooks
+        # print('self.hooks:',self.hooks)
         self.backbone = backbone
         self.drop_out = nn.Dropout()
 
@@ -123,9 +124,12 @@ class ModelProgression(Module):
         self.forward_feat.clear()
         self.attention_map.clear()
         feat = self.backbone(x)
+        print('feat.shape after backbone:',feat.shape)##torch.Size([3, 2048])
         feat = feat.view(feat.shape[0], -1)
+        print('feat:',feat.shape)
         feat = self.drop_out(feat)
         out = self.fc(feat)
+        print('out:',out.shape)
         return out
 
 
