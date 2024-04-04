@@ -51,8 +51,10 @@ class ProgressionData(Dataset):
 
     def __getitem__(self, idx):
         X = self.df.iloc[idx][self.feature_keys].values
-        gta=self.df.iloc[idx]['gt'] if 'gt' in self.df.columns else 0
-        print('gta:',gta)
+        # gta=self.df.iloc[idx]['gt'] if 'gt' in self.df.columns else 0
+        # print('gta:',gta)
+        # t1t=self.df.iloc[idx]['t1']
+        # print('t1t:',t1t)
         return dict(
             covar=X,
             t1=self.df.iloc[idx]['t1'],
