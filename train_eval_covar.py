@@ -42,9 +42,9 @@ class ProgressionData(Dataset):
     def __init__(self, datasheet, feature_keys):
         super().__init__()
         self.df = pd.read_csv(datasheet)
-        print('self.df',self.df)
+        # print('self.df',self.df)
         self.feature_keys = feature_keys
-        print('self.feature_keys',self.feature_keys)
+        # print('self.feature_keys',self.feature_keys)
 
     def __len__(self):
         return len(self.df)
@@ -134,5 +134,17 @@ class TrainerDR(Trainer):
 if __name__ == '__main__':
     import sys
     # print('sys.argv',sys.argv)
-    trainer = TrainerDR(sys.argv[1:])
-    trainer.train()
+    # trainer = TrainerDR(sys.argv[1:])
+    # trainer.train()
+    from torch.utils.data import DataLoader
+    fu = ProgressionData('data_covar/test.csv',sys.argv[1:] )
+    # next(iter(fu))
+    ader = DataLoader(
+            fu,
+            batch_size=1,
+            shuffle=True,
+            num_workers=1,
+        )
+    for i in ader:
+        print(i)
+        
