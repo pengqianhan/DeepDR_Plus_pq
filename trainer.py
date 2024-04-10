@@ -84,7 +84,7 @@ class TrainerConfig(Config):
                    lambda x: not x.lower().startswith('f'), 'debug mode ')
     load_pretrain = Parser('load_pretrain', None, str, 'load pretrained model')
     batch_size = Parser('batch_size', 32, int, 'batch size')
-    epochs = Parser('epochs', 100, int, 'number of max epochs to train')
+    epochs = Parser('epochs', 1, int, 'number of max epochs to train')
     image_size = Parser('image_size', 512, int, 'image size')
     lr = Parser('lr', 0.001, float, 'learning rate')
     device = Parser('device', 'cuda:0', str, 'device')

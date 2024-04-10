@@ -46,11 +46,15 @@ class DeepSurModel(nn.Module):
         return: nBatch * n: cdf values
         """
         t = t.unsqueeze(dim=2)## t: nBatch * n * 1
+        print('t.shape', t.shape)##t.shape torch.Size([2, 2, 1])
         w = nn.functional.softmax(w, dim=1)### ensure sum of w is 1, to mix the weibull distribution
         w = w.unsqueeze(dim=1)#3 w: nBatch * 1 * K
+        print('w.shape', w.shape)##w.shape torch.Size([2, 1, 512])
         cdf = self._cdf_at(t)#3 pdf: nBatch * n * K
+        print('cdf.shape', cdf.shape)##cdf.shape torch.Size([2, 2, 512])
         cdf = cdf * w## cdf: nBatch * n * K
         cdf = cdf.sum(dim=2)## cdf: nBatch * n
+        print('cdf.shape', cdf.shape)##cdf.shape torch.Size([2, 2])
         return cdf
 
     def calculate_pdf(self, w, t):
@@ -63,10 +67,14 @@ class DeepSurModel(nn.Module):
         return: nBatch * n: pdf values
         """
         t = t.unsqueeze(dim=2)
+        print('t.shape', t.shape)##t.shape torch.Size([2, 2, 1])##[1,199,1]
         w = nn.functional.softmax(w, dim=1)
         w = w.unsqueeze(dim=1)## w: nBatch * 1 * K
+        print('w.shape', w.shape)##w.shape torch.Size([2, 1, 512])
         pdf = self._pdf_at(t)### pdf: nBatch * n * K
+        print('pdf.shape', pdf.shape)##pdf.shape torch.Size([2, 2, 512])
         pdf = pdf * w## pdf: nBatch * n * K
+        print('pdf.shape', pdf.shape)##pdf.shape torch.Size([2, 2, 512])
         pdf = pdf.sum(dim=2)
         return pdf## pdf: nBatch * n
 
@@ -80,11 +88,12 @@ class DeepSurModel(nn.Module):
             math.ceil(resolution*t_max)-1,
             dtype=torch.float32,
             device=w.device).view(1, -1)## t shape torch.Size([1, 199])
+        
         # torch.linspace(start, end, steps, out=None, dtype=None, layout=torch.strided, device=None, requires_grad=False) → Tensor
         pdf = self.calculate_pdf(w, t)##nBatch * n
-        # print(pdf[])
+        
         est = t.view(-1)[torch.argmax(pdf, dim=1)]##在pdf 中取值最大的索引（表示最大概率得病的概率），然后对应到时间t上
-        # print(torch.argmax(pdf, dim=1).shape())
+        
         return est
 
     def forward(self, x, t=None):
@@ -218,6 +227,7 @@ class TrainerDR(Trainer):
         cdf = self.model.calculate_cdf(w, time_to_cal)
         pdf = self.model.calculate_pdf(w, time_to_cal)
         survival_time = self.model.calculate_survial_time(w)
+        print('survival_time', survival_time)##survival_time tensor([ 1.0000,  1.0000], device='cuda:0')
         return dict(
             loss=loss.mean(),
             pdf=pdf,
@@ -237,3 +247,4 @@ class TrainerDR(Trainer):
 if __name__ == '__main__':
     trainer = TrainerDR()
     trainer.train()
+    # trainer.test()
